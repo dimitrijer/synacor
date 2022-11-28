@@ -1,0 +1,5 @@
+(library
+ (name synacortest)
+ (inline_tests)
+ (libraries synacor)
+ (preprocess (pps ppx_jane)))
