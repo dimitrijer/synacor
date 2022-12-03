@@ -5,68 +5,94 @@ module type DATA = sig
   val max : t
   val min : t
   val of_int : int -> t
+  val of_int_opt : int -> t option
   val to_int : t -> int
+  val modulo : t
+  val add : t -> t -> t
 end
 
 module type ADDR = sig
-  include Map.OrderedType
-
-  type reg =
-    | R0
-    | R1
-    | R2
-    | R3
-    | R4
-    | R5
-    | R6
-    | R7
+  type t
 
   val of_int : int -> t
+  val of_int_opt : int -> t option
   val to_int : t -> int
-  val to_string : t -> string
   val low : t
   val high : t
   val incr : t -> t
-  val add : int -> t -> t
-  val to_reg : t -> reg
-  val to_reg_opt : t -> reg option
-  val of_reg : reg -> t
 end
 
-module Impl = struct
+module Data_Impl = struct
   type t = int
 
-  type reg =
-    | R0
-    | R1
-    | R2
-    | R3
-    | R4
-    | R5
-    | R6
-    | R7
+  (* Invalid value that is still in 16-bit range. *)
+  let undef = Int.shift_left 1 16 - 1
 
-  let compare = ( - )
-  let low = 0
-  let high = 32775 (* to allow register addressing *)
-
-  let max = high
-  let min = low
-  let undef = Int.shift_left 1 16 - 1 (* invalid value that is still in 16-bit range *)
-
-  (* Highest mem addr, register addresses in [mem_high, high] range. *)
-  let mem_high = 32767
-  let to_int x = x
+  (* Includes register address range. *)
+  let max = 32775
+  let min = 0
+  let of_int_opt x = if x >= min && x <= max then Some x else None
 
   let of_int x =
-    if x >= low && x <= high then x else failwith @@ Printf.sprintf "illegal value: %d" x
+    match of_int_opt x with
+    | Some a -> a
+    | None -> failwith @@ Printf.sprintf "illegal data: %d" x
   ;;
 
-  let add c x = of_int (to_int x + c)
-  let incr x = add x 1
+  let to_int x = x
+  let modulo = 32768
+  let add a b = (a + b) mod modulo
+end
 
-  let to_reg_opt x =
-    match to_int x with
+module D : DATA = Data_Impl
+
+module Addr_Impl = struct
+  type t = int
+
+  let low = 0
+  let high = 32767
+  let to_int x = x
+  let of_int_opt x = if x >= low && x <= high then Some x else None
+
+  let of_int x =
+    match of_int_opt x with
+    | Some a -> a
+    | None -> failwith @@ Printf.sprintf "illegal address: %d" x
+  ;;
+
+  let incr x = of_int (to_int x + 1)
+end
+
+module A : ADDR = Addr_Impl
+
+type r =
+  | R0
+  | R1
+  | R2
+  | R3
+  | R4
+  | R5
+  | R6
+  | R7
+
+module Reg_Impl = struct
+  type t = r
+
+  let low = R0
+  let high = R7
+
+  let to_int = function
+    | R0 -> 32768
+    | R1 -> 32769
+    | R2 -> 32770
+    | R3 -> 32771
+    | R4 -> 32772
+    | R5 -> 32773
+    | R6 -> 32774
+    | R7 -> 32775
+  ;;
+
+  let of_int_opt = function
     | 32768 -> Some R0
     | 32769 -> Some R1
     | 32770 -> Some R2
@@ -78,29 +104,13 @@ module Impl = struct
     | _ -> None
   ;;
 
-  let to_string x =
-    match to_reg_opt x with
-    | Some _ -> Printf.sprintf "REG%d" (x - mem_high - 1)
-    | None -> Int.to_string x
+  let of_int x =
+    match of_int_opt x with
+    | Some r -> r
+    | None -> failwith @@ Printf.sprintf "illegal reg: %d" x
   ;;
 
-  let to_reg x =
-    match to_reg_opt x with
-    | Some x -> x
-    | None -> failwith @@ Printf.sprintf "invalid register addr: %d" (to_int x)
-  ;;
-
-  let of_reg = function
-    | R0 -> of_int 32768
-    | R1 -> of_int 32769
-    | R2 -> of_int 32770
-    | R3 -> of_int 32771
-    | R4 -> of_int 32772
-    | R5 -> of_int 32773
-    | R6 -> of_int 32774
-    | R7 -> of_int 32775
-  ;;
+  let incr x = of_int (to_int x + 1)
 end
 
-module D : DATA = Impl
-module A : ADDR = Impl
+module R : ADDR with type t = r = Reg_Impl

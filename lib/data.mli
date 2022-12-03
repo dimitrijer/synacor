@@ -1,4 +1,5 @@
-(** [DATA] interface represents a value. *)
+(** [DATA] interface represents a value that is stored or read in memory,
+    registers and stack. *)
 module type DATA = sig
   (** [t] is type of value. *)
   type t
@@ -17,35 +18,37 @@ module type DATA = sig
       [x > max || x < min]. *)
   val of_int : int -> t
 
+  (** [of_int_opt x] converts integer [x] to data value. Returns None if
+      [x > (to_int high) || x < (to_int low)]. *)
+  val of_int_opt : int -> t option
+
   (** [to_int d] converts data [d] to integer. *)
   val to_int : t -> int
+
+  (** [modulo] is the value that arithmetic operations on data wrap around. *)
+  val modulo : t
+
+  (** [add a b] adds [a] to [b] modulo [modulo_max]. *)
+  val add : t -> t -> t
 end
 
-(** [ADDR] interface represents addresses and operations on them. *)
+(** [ADDR] interface represents memory addresses and operations on them. *)
 module type ADDR = sig
-  (* Necessary for use in Maps. *)
-  include Map.OrderedType
+  (* include Base.Comparable.S with type t := int *)
 
-  (* Register type represents specific register. *)
-  type reg =
-    | R0
-    | R1
-    | R2
-    | R3
-    | R4
-    | R5
-    | R6
-    | R7
+  (** [t] is type of address. *)
+  type t
 
   (** [of_int x] converts integer [x] into address. Throws an exception if
-      [x > high || h < low]. *)
+      [x > (to_int high) || x < (to_int low)]. *)
   val of_int : int -> t
+
+  (** [of_int_opt x] converts integer [x] into address. Returns None if
+      [x > (to_int high) || x < (to_int low)]. *)
+  val of_int_opt : int -> t option
 
   (** [to_int x] converts address [a] to integer. *)
   val to_int : t -> int
-
-  (** [to_string a] is string representation of [a]. *)
-  val to_string : t -> string
 
   (** [low] represents lowest address. *)
   val low : t
@@ -53,28 +56,27 @@ module type ADDR = sig
   (** [high] represents highest address. *)
   val high : t
 
-  (** [incr a] increments address by one. Throwns an exception if resulting
+  (** [incr a] increments address by one. Throws an exception if resulting
       address would be higher than [high]. *)
   val incr : t -> t
-
-  (** [add c a] adds [c] to address [a]. Throws an exception if address would
-      be higher than [high]. *)
-  val add : int -> t -> t
-
-  (** [to_reg a] converts address [a] to register enum. Throws an exception if
-      [a] is not register address. *)
-  val to_reg : t -> reg
-
-  (** [to_reg a] converts address [a] to register, returning [None] if [a]
-      is not register address. *)
-  val to_reg_opt : t -> reg option
-
-  (** [of_reg r] converts register [r] into its address. *)
-  val of_reg : reg -> t
 end
 
-(** [D] is a [DATA] module implementation for Synacor arch. *)
+(* [r] is register identifier type for Synacor arch. *)
+type r =
+  | R0
+  | R1
+  | R2
+  | R3
+  | R4
+  | R5
+  | R6
+  | R7
+
+(** [D] is a [DATA] module implementation for Synacor arch data. *)
 module D : DATA
 
-(** [A] is a [ADDR] module implementation for Synacor arch. *)
+(** [A] is a [ADDR] module implementation for Synacor arch memory addresses. *)
 module A : ADDR
+
+(** [R] is a [ADDR] module implementation for Synacor arch register addresses. *)
+module R : ADDR with type t = r
