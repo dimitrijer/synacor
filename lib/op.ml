@@ -46,6 +46,23 @@ let specs =
             in
             return false)
     }
+  ; (* [eq (reg|mem) (reg|lit) (reg|lit)] *)
+    { name = "eq"
+    ; opcode = 4
+    ; exec =
+        State.(
+          fun () ->
+            let* dst = fetch_reg_or_addr () in
+            let* op1 = load_reg_or_lit () in
+            let* op2 = load_reg_or_lit () in
+            let result = D.of_int @@ if D.equal op1 op2 then 1 else 0 in
+            let* _ =
+              match dst with
+              | Either.Left r -> write_reg r result
+              | Either.Right a -> write_mem a result
+            in
+            return false)
+    }
   ; (* [add (reg|mem) (reg|lit) (reg|lit)] *)
     { name = "add"
     ; opcode = 9

@@ -30,6 +30,9 @@ module type DATA = sig
 
   (** [add a b] adds [a] to [b] modulo [modulo_max]. *)
   val add : t -> t -> t
+
+  (** [equal a b] returs true if [a == b]. *)
+  val equal : t -> t -> bool
 end
 
 (** [ADDR] interface represents memory addresses and operations on them. *)

@@ -18,6 +18,7 @@ module Data_Impl = struct
   let to_int x = x
   let modulo = 32768
   let add a b = (a + b) mod modulo
+  let equal = Int.equal
 end
 
 module D : Data.DATA = Data_Impl
