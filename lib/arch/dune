@@ -1,5 +1,5 @@
 (library
- (name synacor)
+ (name arch)
  (inline_tests)
- (libraries arch)
+ (modules_without_implementation data)
  (preprocess (pps ppx_jane)))

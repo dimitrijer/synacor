@@ -1,27 +1,3 @@
-module type DATA = sig
-  type t
-
-  val undef : t
-  val max : t
-  val min : t
-  val of_int : int -> t
-  val of_int_opt : int -> t option
-  val to_int : t -> int
-  val modulo : t
-  val add : t -> t -> t
-end
-
-module type ADDR = sig
-  type t
-
-  val of_int : int -> t
-  val of_int_opt : int -> t option
-  val to_int : t -> int
-  val low : t
-  val high : t
-  val incr : t -> t
-end
-
 module Data_Impl = struct
   type t = int
 
@@ -44,7 +20,7 @@ module Data_Impl = struct
   let add a b = (a + b) mod modulo
 end
 
-module D : DATA = Data_Impl
+module D : Data.DATA = Data_Impl
 
 module Addr_Impl = struct
   type t = int
@@ -63,44 +39,34 @@ module Addr_Impl = struct
   let incr x = of_int (to_int x + 1)
 end
 
-module A : ADDR = Addr_Impl
-
-type r =
-  | R0
-  | R1
-  | R2
-  | R3
-  | R4
-  | R5
-  | R6
-  | R7
+module A : Data.ADDR = Addr_Impl
 
 module Reg_Impl = struct
-  type t = r
+  type t = Reg.r
 
-  let low = R0
-  let high = R7
+  let low = Reg.R0
+  let high = Reg.R7
 
   let to_int = function
-    | R0 -> 32768
-    | R1 -> 32769
-    | R2 -> 32770
-    | R3 -> 32771
-    | R4 -> 32772
-    | R5 -> 32773
-    | R6 -> 32774
-    | R7 -> 32775
+    | Reg.R0 -> 32768
+    | Reg.R1 -> 32769
+    | Reg.R2 -> 32770
+    | Reg.R3 -> 32771
+    | Reg.R4 -> 32772
+    | Reg.R5 -> 32773
+    | Reg.R6 -> 32774
+    | Reg.R7 -> 32775
   ;;
 
   let of_int_opt = function
-    | 32768 -> Some R0
-    | 32769 -> Some R1
-    | 32770 -> Some R2
-    | 32771 -> Some R3
-    | 32772 -> Some R4
-    | 32773 -> Some R5
-    | 32774 -> Some R6
-    | 32775 -> Some R7
+    | 32768 -> Some Reg.R0
+    | 32769 -> Some Reg.R1
+    | 32770 -> Some Reg.R2
+    | 32771 -> Some Reg.R3
+    | 32772 -> Some Reg.R4
+    | 32773 -> Some Reg.R5
+    | 32774 -> Some Reg.R6
+    | 32775 -> Some Reg.R7
     | _ -> None
   ;;
 
@@ -113,4 +79,14 @@ module Reg_Impl = struct
   let incr x = of_int (to_int x + 1)
 end
 
-module R : ADDR with type t = r = Reg_Impl
+module RI : Data.ADDR with type t = Reg.r = Reg_Impl
+module M = Mem.Make (A) (D)
+module R = Reg.Make (RI) (D)
+module S = Stack
+
+type t =
+  { pc : A.t
+  ; mem : M.t
+  ; stack : D.t S.t
+  ; reg : R.t
+  }

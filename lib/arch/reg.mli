@@ -1,3 +1,14 @@
+(* [r] is register identifier type for Synacor arch. *)
+type r =
+  | R0
+  | R1
+  | R2
+  | R3
+  | R4
+  | R5
+  | R6
+  | R7
+
 (** [REG] is interface that represents registers. *)
 module type REG = sig
   (** [t] is type of registers. *)
@@ -21,5 +32,5 @@ end
 
 (** [Make] functor creates a concrete registers module for given address [A]
     and data [D] module implementations. *)
-module Make (A : Data.ADDR with type t = Data.r) (D : Data.DATA) :
+module Make (A : Data.ADDR with type t = r) (D : Data.DATA) :
   REG with type data = D.t with type addr = A.t

@@ -60,23 +60,3 @@ module type ADDR = sig
       address would be higher than [high]. *)
   val incr : t -> t
 end
-
-(* [r] is register identifier type for Synacor arch. *)
-type r =
-  | R0
-  | R1
-  | R2
-  | R3
-  | R4
-  | R5
-  | R6
-  | R7
-
-(** [D] is a [DATA] module implementation for Synacor arch data. *)
-module D : DATA
-
-(** [A] is a [ADDR] module implementation for Synacor arch memory addresses. *)
-module A : ADDR
-
-(** [R] is a [ADDR] module implementation for Synacor arch register addresses. *)
-module R : ADDR with type t = r

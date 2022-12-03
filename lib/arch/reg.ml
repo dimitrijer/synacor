@@ -1,3 +1,14 @@
+(* [r] is register identifier type for Synacor arch. *)
+type r =
+  | R0
+  | R1
+  | R2
+  | R3
+  | R4
+  | R5
+  | R6
+  | R7
+
 module type REG = sig
   type t
   type addr
@@ -8,7 +19,7 @@ module type REG = sig
   val empty : t
 end
 
-module Make (A : Data.ADDR with type t = Data.r) (D : Data.DATA) :
+module Make (A : Data.ADDR with type t = r) (D : Data.DATA) :
   REG with type data = D.t with type addr = A.t = struct
   module MA : Map.OrderedType with type t = A.t = struct
     include A

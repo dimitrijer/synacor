@@ -1,18 +1,19 @@
 open Synacor
+open Arch
 
 type op =
   | Noop
-  | Set of (Data.R.t * Data.D.t)
-  | Add of (Data.D.t * Data.D.t * Data.D.t)
-  | Out of Data.D.t
+  | Set of (RI.t * D.t)
+  | Add of (D.t * D.t * D.t)
+  | Out of D.t
   | Halt
 
 let to_ints op =
   match op with
   | Halt -> [ 0 ]
-  | Set (a, b) -> [ 1; Data.R.to_int a; Data.D.to_int b ]
-  | Add (a, b, c) -> [ 9; Data.D.to_int a; Data.D.to_int b; Data.D.to_int c ]
-  | Out a -> [ 19; Data.D.to_int a ]
+  | Set (a, b) -> [ 1; RI.to_int a; D.to_int b ]
+  | Add (a, b, c) -> [ 9; D.to_int a; D.to_int b; D.to_int c ]
+  | Out a -> [ 19; D.to_int a ]
   | Noop -> [ 21 ]
 ;;
 
@@ -25,12 +26,12 @@ let bytecode (ops : op list) =
 ;;
 
 let run_vm_ints (is : int list) =
-  try ignore @@ Op.run (State.of_ints is) with
+  try ignore @@ Vm.run (Vm.of_ints is) with
   | e -> Printf.printf "unhandled exn: %s" (Printexc.to_string e)
 ;;
 
 let run_vm ops =
-  try ignore @@ Op.run (State.of_bytes (bytecode ops)) with
+  try ignore @@ Vm.run (Vm.of_bytes (bytecode ops)) with
   | e -> Printf.printf "unhandled exn: %s" (Printexc.to_string e)
 ;;
 
@@ -55,11 +56,7 @@ let%expect_test "multiple noops" =
 ;;
 
 let%expect_test "out" =
-  run_vm
-    [ Set (Data.R4, Data.D.of_int 65)
-    ; Out (Data.R4 |> Data.R.to_int |> Data.D.of_int)
-    ; Halt
-    ];
+  run_vm [ Set (R4, D.of_int 65); Out (R4 |> RI.to_int |> D.of_int); Halt ];
   [%expect {|A|}]
 ;;
 
