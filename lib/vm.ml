@@ -1,6 +1,6 @@
 open Arch
 
-let rec load_mem (bs : bytes) (mem : Arch.M.t) (a : A.t) =
+let rec load_mem (bs : bytes) (mem : M.t) (a : A.t) =
   match Bytes.length bs with
   | 0 -> mem
   | 1 -> failwith "leftover bytes after loading mem"
@@ -13,7 +13,7 @@ let rec load_mem (bs : bytes) (mem : Arch.M.t) (a : A.t) =
 ;;
 
 let of_bytes (bs : bytes) =
-  { pc = A.low; mem = load_mem bs M.empty A.low; reg = R.empty; stack = Arch.S.empty }
+  { pc = A.low; mem = load_mem bs M.empty A.low; reg = R.empty; stack = S.empty }
 ;;
 
 let of_ints (is : int list) =

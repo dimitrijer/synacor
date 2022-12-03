@@ -21,6 +21,31 @@ let specs =
             let* _ = write_reg r lit in
             return false)
     }
+  ; (* [push (reg|lit)] *)
+    { name = "push"
+    ; opcode = 2
+    ; exec =
+        State.(
+          fun () ->
+            let* op = load_reg_or_lit () in
+            let* _ = push op in
+            return false)
+    }
+  ; (* [pop (reg|mem)] *)
+    { name = "pop"
+    ; opcode = 3
+    ; exec =
+        State.(
+          fun () ->
+            let* dst = fetch_reg_or_addr () in
+            let* v = pop in
+            let* _ =
+              match dst with
+              | Either.Left r -> write_reg r v
+              | Either.Right a -> write_mem a v
+            in
+            return false)
+    }
   ; (* [add (reg|mem) (reg|lit) (reg|lit)] *)
     { name = "add"
     ; opcode = 9
