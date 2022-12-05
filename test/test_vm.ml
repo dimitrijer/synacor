@@ -7,6 +7,8 @@ type op =
   | Add of (D.t * D.t * D.t)
   | Push of D.t
   | Pop of D.t
+  | Rmem of (D.t * A.t)
+  | Wmem of (A.t * D.t)
   | Out of D.t
   | Halt
 
@@ -14,9 +16,11 @@ let to_ints op =
   match op with
   | Halt -> [ 0 ]
   | Set (a, b) -> [ 1; RI.to_int a; D.to_int b ]
-  | Add (a, b, c) -> [ 9; D.to_int a; D.to_int b; D.to_int c ]
   | Push a -> [ 2; D.to_int a ]
   | Pop a -> [ 3; D.to_int a ]
+  | Add (a, b, c) -> [ 9; D.to_int a; D.to_int b; D.to_int c ]
+  | Rmem (a, b) -> [ 15; D.to_int a; A.to_int b ]
+  | Wmem (a, b) -> [ 16; A.to_int a; D.to_int b ]
   | Out a -> [ 19; D.to_int a ]
   | Noop -> [ 21 ]
 ;;
@@ -97,6 +101,18 @@ let%expect_test "push and pop" =
 let%expect_test "pop throws on empty stack" =
   run_vm [ Pop (R3 |> RI.to_int |> D.of_int); Halt ];
   [%expect {|unhandled exn: Failure("stack empty")|}]
+;;
+
+let%expect_test "rmem and wmem" =
+  run_vm
+    [ Set (R0, D.of_int 50)
+    ; Wmem (A.of_int 12345, R0 |> RI.to_int |> D.of_int)
+    ; Rmem (R1 |> RI.to_int |> D.of_int, A.of_int 12345)
+    ; Out (R1 |> RI.to_int |> D.of_int)
+    ; (* ascii 50 = '2' *)
+      Halt
+    ];
+  [%expect {|2|}]
 ;;
 (* let%expect_test "from spec" = *)
 (*   run_vm_ints [ 9; 32768; 32769; 4; 19; 32768; 0 ]; *)

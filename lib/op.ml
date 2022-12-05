@@ -39,11 +39,7 @@ let specs =
           fun () ->
             let* dst = fetch_reg_or_addr () in
             let* v = pop in
-            let* _ =
-              match dst with
-              | Either.Left r -> write_reg r v
-              | Either.Right a -> write_mem a v
-            in
+            let* _ = write_reg_or_addr dst v in
             return false)
     }
   ; (* [eq (reg|mem) (reg|lit) (reg|lit)] *)
@@ -55,12 +51,8 @@ let specs =
             let* dst = fetch_reg_or_addr () in
             let* op1 = load_reg_or_lit () in
             let* op2 = load_reg_or_lit () in
-            let result = D.of_int @@ if D.equal op1 op2 then 1 else 0 in
-            let* _ =
-              match dst with
-              | Either.Left r -> write_reg r result
-              | Either.Right a -> write_mem a result
-            in
+            let result = D.of_int @@ if D.eq op1 op2 then 1 else 0 in
+            let* _ = write_reg_or_addr dst result in
             return false)
     }
   ; (* [add (reg|mem) (reg|lit) (reg|lit)] *)
@@ -73,11 +65,30 @@ let specs =
             let* op1 = load_reg_or_lit () in
             let* op2 = load_reg_or_lit () in
             let result = D.add op1 op2 in
-            let* _ =
-              match dst with
-              | Either.Left r -> write_reg r result
-              | Either.Right a -> write_mem a result
-            in
+            let* _ = write_reg_or_addr dst result in
+            return false)
+    }
+  ; (* [rmem (reg|mem) mem] *)
+    { name = "rmem"
+    ; opcode = 15
+    ; exec =
+        State.(
+          fun () ->
+            let* dst = fetch_reg_or_addr () in
+            let* src = fetch_addr () in
+            let* srcv = read_mem src in
+            let* _ = write_reg_or_addr dst srcv in
+            return false)
+    }
+  ; (* [wmem (reg|mem) mem] *)
+    { name = "wmem"
+    ; opcode = 16
+    ; exec =
+        State.(
+          fun () ->
+            let* dst = fetch_addr () in
+            let* srcv = load_reg_or_lit () in
+            let* _ = write_mem dst srcv in
             return false)
     }
   ; (* [out (reg|mem)] *)

@@ -27,6 +27,14 @@ let fetch_reg () =
     | None -> failwith @@ Printf.sprintf "not a register address: %d" (D.to_int d))
 ;;
 
+let fetch_addr () =
+  State.(
+    let* d = fetch_data () in
+    match RI.of_int_opt (D.to_int d) with
+    | Some _ -> failwith @@ Printf.sprintf "not a memory address: %d" (D.to_int d)
+    | None -> return (d |> D.to_int |> A.of_int))
+;;
+
 let fetch_lit () =
   State.(
     let* d = fetch_data () in
@@ -50,4 +58,10 @@ let load_reg_or_lit () =
     match d |> D.to_int |> RI.of_int_opt with
     | Some r -> read_reg r
     | None -> return d)
+;;
+
+let write_reg_or_addr a v =
+  match a with
+  | Either.Left r -> write_reg r v
+  | Either.Right a -> write_mem a v
 ;;
