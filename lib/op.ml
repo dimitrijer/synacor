@@ -38,7 +38,7 @@ let specs =
         State.(
           fun () ->
             let* dst = fetch_reg_or_addr () in
-            let* v = pop in
+            let* v = pop () in
             let* _ = write_reg_or_addr dst v in
             return false)
     }
@@ -208,6 +208,34 @@ let specs =
             let* srcv = load_reg_or_lit () in
             let* _ = write_mem dst srcv in
             return false)
+    }
+  ; (* [call mem] *)
+    { name = "call"
+    ; opcode = 17
+    ; exec =
+        State.(
+          fun () ->
+            let* dst = fetch_addr () in
+            let* state = get () in
+            let* _ = push (state.pc |> A.to_int |> D.of_int) in
+            let* state' = get () in
+            (* stack state changed *)
+            let* _ = put { state' with pc = dst } in
+            return false)
+    }
+  ; (* [ret] *)
+    { name = "ret"
+    ; opcode = 18
+    ; exec =
+        State.(
+          fun () ->
+            try
+              let* dst = pop () in
+              let* state = get () in
+              let* _ = put { state with pc = dst |> D.to_int |> A.of_int } in
+              return false
+            with
+            | S.Stack_Empty -> return true)
     }
   ; (* [out (reg|lit)] *)
     { name = "out"

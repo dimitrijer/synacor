@@ -21,6 +21,8 @@ type op =
   | Not of (D.t * D.t)
   | Rmem of (D.t * A.t)
   | Wmem of (A.t * D.t)
+  | Call of A.t
+  | Ret
   | Out of D.t
   | Halt
 
@@ -43,6 +45,8 @@ let to_ints op =
   | Not (a, b) -> [ 14; D.to_int a; D.to_int b ]
   | Rmem (a, b) -> [ 15; D.to_int a; A.to_int b ]
   | Wmem (a, b) -> [ 16; A.to_int a; D.to_int b ]
+  | Call a -> [ 17; A.to_int a ]
+  | Ret -> [ 18 ]
   | Out a -> [ 19; D.to_int a ]
   | Noop -> [ 21 ]
 ;;
@@ -175,7 +179,7 @@ let%expect_test "push and pop" =
 
 let%expect_test "pop throws on empty stack" =
   run_vm [ Pop (to_d R3); Halt ];
-  [%expect {|unhandled exn: Failure("stack empty")|}]
+  [%expect {|unhandled exn: Arch__Stack.Stack_Empty|}]
 ;;
 
 let%expect_test "rmem and wmem" =
@@ -258,7 +262,27 @@ let%expect_test "jf" =
     ];
   [%expect {|12|}]
 ;;
-(* let%expect_test "from spec" = *)
-(*   run_vm_ints [ 9; 32768; 32769; 4; 19; 32768; 0 ]; *)
-(*   [%expect {|A|}] *)
-(* ;; *)
+
+let%expect_test "call and ret" =
+  run_vm
+    [ Call (A.of_int 17)
+    ; Call (A.of_int 23)
+    ; Call (A.of_int 17)
+    ; Out (D.of_int 48) (* ascii 0 *)
+    ; Call (A.of_int 17)
+    ; Call (A.of_int 17)
+    ; Call (A.of_int 23)
+    ; Halt
+    ; Noop
+    ; Noop
+    ; Noop
+    ; Out (D.of_int 49) (* ascii 1 *)
+    ; Ret
+    ; Noop
+    ; Noop
+    ; Noop
+    ; Out (D.of_int 50) (* ascii 2 *)
+    ; Ret
+    ];
+  [%expect {|1210112|}]
+;;

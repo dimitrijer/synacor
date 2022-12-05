@@ -1,6 +1,8 @@
 (** Stack type. *)
 type 'a t
 
+exception Stack_Empty
+
 (** [empty] returns an empty stack. *)
 val empty : 'a t
 

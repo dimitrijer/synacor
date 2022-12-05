@@ -3,8 +3,10 @@ type 'a t = 'a list
 let empty = []
 let push v s = v :: s
 
+exception Stack_Empty
+
 let pop = function
-  | [] -> failwith "stack empty"
+  | [] -> raise Stack_Empty
   | hd :: tl -> hd, tl
 ;;
 

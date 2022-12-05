@@ -6,7 +6,7 @@ let write_reg r v state = (), { state with reg = R.write r v state.reg }
 let write_mem a v state = (), { state with mem = M.write a v state.mem }
 let push v state = (), { state with stack = S.push v state.stack }
 
-let pop state =
+let pop () state =
   let v, stack' = S.pop state.stack in
   v, { state with stack = stack' }
 ;;
