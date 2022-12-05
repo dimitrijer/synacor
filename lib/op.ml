@@ -122,6 +122,70 @@ let specs =
             let* _ = write_reg_or_addr dst result in
             return false)
     }
+  ; (* [mult (reg|mem) (reg|lit) (reg|lit)] *)
+    { name = "mult"
+    ; opcode = 10
+    ; exec =
+        State.(
+          fun () ->
+            let* dst = fetch_reg_or_addr () in
+            let* op1 = load_reg_or_lit () in
+            let* op2 = load_reg_or_lit () in
+            let result = D.mult op1 op2 in
+            let* _ = write_reg_or_addr dst result in
+            return false)
+    }
+  ; (* [mod (reg|mem) (reg|lit) (reg|lit)] *)
+    { name = "mod"
+    ; opcode = 11
+    ; exec =
+        State.(
+          fun () ->
+            let* dst = fetch_reg_or_addr () in
+            let* op1 = load_reg_or_lit () in
+            let* op2 = load_reg_or_lit () in
+            let result = D.modu op1 op2 in
+            let* _ = write_reg_or_addr dst result in
+            return false)
+    }
+  ; (* [and (reg|mem) (reg|lit) (reg|lit)] *)
+    { name = "and"
+    ; opcode = 12
+    ; exec =
+        State.(
+          fun () ->
+            let* dst = fetch_reg_or_addr () in
+            let* op1 = load_reg_or_lit () in
+            let* op2 = load_reg_or_lit () in
+            let result = D.logand op1 op2 in
+            let* _ = write_reg_or_addr dst result in
+            return false)
+    }
+  ; (* [or (reg|mem) (reg|lit) (reg|lit)] *)
+    { name = "or"
+    ; opcode = 13
+    ; exec =
+        State.(
+          fun () ->
+            let* dst = fetch_reg_or_addr () in
+            let* op1 = load_reg_or_lit () in
+            let* op2 = load_reg_or_lit () in
+            let result = D.logor op1 op2 in
+            let* _ = write_reg_or_addr dst result in
+            return false)
+    }
+  ; (* [not (reg|mem) (reg|lit)] *)
+    { name = "not"
+    ; opcode = 14
+    ; exec =
+        State.(
+          fun () ->
+            let* dst = fetch_reg_or_addr () in
+            let* op = load_reg_or_lit () in
+            let result = D.lognot op in
+            let* _ = write_reg_or_addr dst result in
+            return false)
+    }
   ; (* [rmem (reg|mem) mem] *)
     { name = "rmem"
     ; opcode = 15

@@ -28,8 +28,23 @@ module type DATA = sig
   (** [modulo] is the value that arithmetic operations on data wrap around. *)
   val modulo : t
 
-  (** [add a b] adds [a] to [b] modulo [modulo_max]. *)
+  (** [add a b] calculates [(a + b) mod modulo]. *)
   val add : t -> t -> t
+
+  (** [mult a b] calculates [a * b mod modulo]. *)
+  val mult : t -> t -> t
+
+  (** [logand a b] calculates [a & b]. *)
+  val logand : t -> t -> t
+
+  (** [logor a b] calculates [a | b]. *)
+  val logor : t -> t -> t
+
+  (** [lognot a] calculates [!a]. *)
+  val lognot : t -> t
+
+  (** [modu a b] calculates [a mod b]. *)
+  val modu : t -> t -> t
 
   (** [eq a b] returs true iff [a = b]. *)
   val eq : t -> t -> bool

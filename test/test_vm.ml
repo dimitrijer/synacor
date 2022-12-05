@@ -14,6 +14,11 @@ type op =
   | Jt of (D.t * A.t)
   | Jf of (D.t * A.t)
   | Add of (D.t * D.t * D.t)
+  | Mult of (D.t * D.t * D.t)
+  | Mod of (D.t * D.t * D.t)
+  | And of (D.t * D.t * D.t)
+  | Or of (D.t * D.t * D.t)
+  | Not of (D.t * D.t)
   | Rmem of (D.t * A.t)
   | Wmem of (A.t * D.t)
   | Out of D.t
@@ -31,6 +36,11 @@ let to_ints op =
   | Jt (a, b) -> [ 7; D.to_int a; A.to_int b ]
   | Jf (a, b) -> [ 8; D.to_int a; A.to_int b ]
   | Add (a, b, c) -> [ 9; D.to_int a; D.to_int b; D.to_int c ]
+  | Mult (a, b, c) -> [ 10; D.to_int a; D.to_int b; D.to_int c ]
+  | Mod (a, b, c) -> [ 11; D.to_int a; D.to_int b; D.to_int c ]
+  | And (a, b, c) -> [ 12; D.to_int a; D.to_int b; D.to_int c ]
+  | Or (a, b, c) -> [ 13; D.to_int a; D.to_int b; D.to_int c ]
+  | Not (a, b) -> [ 14; D.to_int a; D.to_int b ]
   | Rmem (a, b) -> [ 15; D.to_int a; A.to_int b ]
   | Wmem (a, b) -> [ 16; A.to_int a; D.to_int b ]
   | Out a -> [ 19; D.to_int a ]
@@ -89,6 +99,62 @@ let%expect_test "add" =
     ; Halt
     ];
   [%expect {|*|}]
+;;
+
+let%expect_test "add overflows" =
+  run_vm
+    [ Set (R6, D.of_int 32760)
+    ; Set (R2, D.of_int 51)
+    ; Add (to_d R3, to_d R2, to_d R6)
+    ; Out (to_d R3) (* ascii 43 = + *)
+    ; Halt
+    ];
+  [%expect {|+|}]
+;;
+
+let%expect_test "mult" =
+  run_vm
+    [ Set (R3, D.of_int 11); Mult (to_d R5, D.of_int 11, to_d R3); Out (to_d R5); Halt ];
+  (* ascii 121 = y *)
+  [%expect {|y|}]
+;;
+
+let%expect_test "mult overflows" =
+  run_vm
+    [ Set (R3, D.of_int 293); Mult (to_d R5, D.of_int 112, to_d R3); Out (to_d R5); Halt ];
+  (* ascii 48 = 0 *)
+  [%expect {|0|}]
+;;
+
+let%expect_test "mod" =
+  run_vm
+    [ Mod (to_d R7, D.of_int 502, D.of_int 67); Out (to_d R7) (* ascii 33 = ! *); Halt ];
+  [%expect {|!|}]
+;;
+
+let%expect_test "and" =
+  run_vm
+    [ And (to_d R7, D.of_int 0xF0, D.of_int 0x28)
+    ; Out (to_d R7) (* ascii 32 = <Space> *)
+    ; Halt
+    ];
+  [%expect {| |}]
+;;
+
+let%expect_test "or" =
+  run_vm
+    [ Or (to_d R4, D.of_int 0x40, D.of_int 0x03); Out (to_d R4) (* ascii 67 = C *); Halt ];
+  [%expect {|C|}]
+;;
+
+let%expect_test "not" =
+  run_vm
+    [ Not (to_d R5, D.of_int 0x7FB5)
+    ; And (to_d R5, to_d R5, D.of_int 0xFF)
+    ; Out (to_d R5) (* ascii 4A = J *)
+    ; Halt
+    ];
+  [%expect {|J|}]
 ;;
 
 let%expect_test "push and pop" =

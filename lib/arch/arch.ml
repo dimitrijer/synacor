@@ -16,8 +16,19 @@ module Data_Impl = struct
   ;;
 
   let to_int x = x
-  let modulo = 32768
+  let modulo = 0x8000 (* 32768 *)
+  let modulo_mask = 0x7FFF
   let add a b = (a + b) mod modulo
+  let mult a b = a * b mod modulo
+  let logand a b = Int.logand a b
+  let logor a b = Int.logor a b
+
+  let lognot a =
+    let na = Int.lognot a in
+    Int.logand na modulo_mask
+  ;;
+
+  let modu a b = a mod b
   let eq = Int.equal
   let gt a b = Int.compare a b > 0
 end
