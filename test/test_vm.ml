@@ -7,6 +7,8 @@ type op =
   | Add of (D.t * D.t * D.t)
   | Push of D.t
   | Pop of D.t
+  | Eq of (D.t * D.t * D.t)
+  | Gt of (D.t * D.t * D.t)
   | Rmem of (D.t * A.t)
   | Wmem of (A.t * D.t)
   | Out of D.t
@@ -18,6 +20,8 @@ let to_ints op =
   | Set (a, b) -> [ 1; RI.to_int a; D.to_int b ]
   | Push a -> [ 2; D.to_int a ]
   | Pop a -> [ 3; D.to_int a ]
+  | Eq (a, b, c) -> [ 4; D.to_int a; D.to_int b; D.to_int c ]
+  | Gt (a, b, c) -> [ 5; D.to_int a; D.to_int b; D.to_int c ]
   | Add (a, b, c) -> [ 9; D.to_int a; D.to_int b; D.to_int c ]
   | Rmem (a, b) -> [ 15; D.to_int a; A.to_int b ]
   | Wmem (a, b) -> [ 16; A.to_int a; D.to_int b ]
@@ -113,6 +117,38 @@ let%expect_test "rmem and wmem" =
       Halt
     ];
   [%expect {|2|}]
+;;
+
+let%expect_test "eq" =
+  run_vm
+    [ Set (R0, D.of_int 51)
+    ; Eq (R1 |> RI.to_int |> D.of_int, R0 |> RI.to_int |> D.of_int, D.of_int 49)
+    ; Eq (R2 |> RI.to_int |> D.of_int, R0 |> RI.to_int |> D.of_int, D.of_int 51)
+    ; Add (R3 |> RI.to_int |> D.of_int, R1 |> RI.to_int |> D.of_int, D.of_int 50)
+      (* 50 + 0 = 50 (ascii 2) *)
+    ; Add (R4 |> RI.to_int |> D.of_int, R2 |> RI.to_int |> D.of_int, D.of_int 50)
+      (* 50 + 1 = 51 (ascii 3) *)
+    ; Out (R3 |> RI.to_int |> D.of_int)
+    ; Out (R4 |> RI.to_int |> D.of_int)
+    ; Halt
+    ];
+  [%expect {|23|}]
+;;
+
+let%expect_test "gt" =
+  run_vm
+    [ Set (R0, D.of_int 123)
+    ; Gt (R1 |> RI.to_int |> D.of_int, D.of_int 150, R0 |> RI.to_int |> D.of_int)
+    ; Gt (R2 |> RI.to_int |> D.of_int, R0 |> RI.to_int |> D.of_int, D.of_int 200)
+    ; Add (R3 |> RI.to_int |> D.of_int, R1 |> RI.to_int |> D.of_int, D.of_int 50)
+      (* 50 + 1 = 51 (ascii 3) *)
+    ; Add (R4 |> RI.to_int |> D.of_int, R2 |> RI.to_int |> D.of_int, D.of_int 50)
+      (* 50 + 0 = 50 (ascii 2) *)
+    ; Out (R3 |> RI.to_int |> D.of_int)
+    ; Out (R4 |> RI.to_int |> D.of_int)
+    ; Halt
+    ];
+  [%expect {|32|}]
 ;;
 (* let%expect_test "from spec" = *)
 (*   run_vm_ints [ 9; 32768; 32769; 4; 19; 32768; 0 ]; *)

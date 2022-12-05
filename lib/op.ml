@@ -55,6 +55,19 @@ let specs =
             let* _ = write_reg_or_addr dst result in
             return false)
     }
+  ; (* [gt (reg|mem) (reg|lit) (reg|lit)] *)
+    { name = "gt"
+    ; opcode = 5
+    ; exec =
+        State.(
+          fun () ->
+            let* dst = fetch_reg_or_addr () in
+            let* op1 = load_reg_or_lit () in
+            let* op2 = load_reg_or_lit () in
+            let result = D.of_int @@ if D.gt op1 op2 then 1 else 0 in
+            let* _ = write_reg_or_addr dst result in
+            return false)
+    }
   ; (* [add (reg|mem) (reg|lit) (reg|lit)] *)
     { name = "add"
     ; opcode = 9
