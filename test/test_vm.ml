@@ -4,11 +4,12 @@ open Arch
 type op =
   | Noop
   | Set of (RI.t * D.t)
-  | Add of (D.t * D.t * D.t)
   | Push of D.t
   | Pop of D.t
   | Eq of (D.t * D.t * D.t)
   | Gt of (D.t * D.t * D.t)
+  | Jmp of A.t
+  | Add of (D.t * D.t * D.t)
   | Rmem of (D.t * A.t)
   | Wmem of (A.t * D.t)
   | Out of D.t
@@ -22,6 +23,7 @@ let to_ints op =
   | Pop a -> [ 3; D.to_int a ]
   | Eq (a, b, c) -> [ 4; D.to_int a; D.to_int b; D.to_int c ]
   | Gt (a, b, c) -> [ 5; D.to_int a; D.to_int b; D.to_int c ]
+  | Jmp a -> [ 6; A.to_int a ]
   | Add (a, b, c) -> [ 9; D.to_int a; D.to_int b; D.to_int c ]
   | Rmem (a, b) -> [ 15; D.to_int a; A.to_int b ]
   | Wmem (a, b) -> [ 16; A.to_int a; D.to_int b ]
@@ -149,6 +151,17 @@ let%expect_test "gt" =
     ; Halt
     ];
   [%expect {|32|}]
+;;
+
+let%expect_test "gt" =
+  run_vm
+    [ Noop
+    ; Jmp (A.of_int 5)
+    ; Out (D.of_int 48) (* ascii 0, skipped over *)
+    ; Out (D.of_int 49) (* ascii 1 *)
+    ; Halt
+    ];
+  [%expect {|1|}]
 ;;
 (* let%expect_test "from spec" = *)
 (*   run_vm_ints [ 9; 32768; 32769; 4; 19; 32768; 0 ]; *)

@@ -68,6 +68,17 @@ let specs =
             let* _ = write_reg_or_addr dst result in
             return false)
     }
+  ; (* [jmp mem *)
+    { name = "jmp"
+    ; opcode = 6
+    ; exec =
+        State.(
+          fun () ->
+            let* dst = fetch_addr () in
+            let* state = get () in
+            let* _ = put { state with pc = dst } in
+            return false)
+    }
   ; (* [add (reg|mem) (reg|lit) (reg|lit)] *)
     { name = "add"
     ; opcode = 9
@@ -104,7 +115,7 @@ let specs =
             let* _ = write_mem dst srcv in
             return false)
     }
-  ; (* [out (reg|mem)] *)
+  ; (* [out (reg|lit)] *)
     { name = "out"
     ; opcode = 19
     ; exec =
