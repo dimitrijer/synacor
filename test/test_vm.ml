@@ -41,12 +41,12 @@ let run_vm ops =
 
 let%expect_test "uninitialized" =
   run_vm [];
-  [%expect {|unhandled exn: (Not_found_s "List.Assoc.find_exn: not found")|}]
+  [%expect {|unhandled exn: Failure("no such opcode: 65535")|}]
 ;;
 
 let%expect_test "no halt" =
   run_vm [ Noop ];
-  [%expect {|unhandled exn: (Not_found_s "List.Assoc.find_exn: not found")|}]
+  [%expect {|unhandled exn: Failure("no such opcode: 65535")|}]
 ;;
 
 let%expect_test "noop" =
@@ -96,7 +96,7 @@ let%expect_test "push and pop" =
 
 let%expect_test "pop throws on empty stack" =
   run_vm [ Pop (R3 |> RI.to_int |> D.of_int); Halt ];
-  [%expect {|unhandled exn: (Failure "stack empty")|}]
+  [%expect {|unhandled exn: Failure("stack empty")|}]
 ;;
 (* let%expect_test "from spec" = *)
 (*   run_vm_ints [ 9; 32768; 32769; 4; 19; 32768; 0 ]; *)

@@ -100,7 +100,12 @@ let specs_by_opcode = List.map (fun spec -> spec.opcode, spec) specs
 let decode () =
   State.(
     let* opcode = fetch_data () in
-    return @@ Base.List.Assoc.find_exn specs_by_opcode ~equal:Int.equal (D.to_int opcode))
+    let spec_opt =
+      Base.List.Assoc.find specs_by_opcode ~equal:Int.equal (D.to_int opcode)
+    in
+    match spec_opt with
+    | Some spec -> return spec
+    | None -> failwith @@ Printf.sprintf "no such opcode: %d" (Arch.D.to_int opcode))
 ;;
 
 let rec run_until_halt () =
