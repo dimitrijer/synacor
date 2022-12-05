@@ -1,6 +1,8 @@
 open Synacor
 open Arch
 
+let to_d ri = ri |> RI.to_int |> D.of_int
+
 type op =
   | Noop
   | Set of (RI.t * D.t)
@@ -9,6 +11,8 @@ type op =
   | Eq of (D.t * D.t * D.t)
   | Gt of (D.t * D.t * D.t)
   | Jmp of A.t
+  | Jt of (D.t * A.t)
+  | Jf of (D.t * A.t)
   | Add of (D.t * D.t * D.t)
   | Rmem of (D.t * A.t)
   | Wmem of (A.t * D.t)
@@ -24,6 +28,8 @@ let to_ints op =
   | Eq (a, b, c) -> [ 4; D.to_int a; D.to_int b; D.to_int c ]
   | Gt (a, b, c) -> [ 5; D.to_int a; D.to_int b; D.to_int c ]
   | Jmp a -> [ 6; A.to_int a ]
+  | Jt (a, b) -> [ 7; D.to_int a; A.to_int b ]
+  | Jf (a, b) -> [ 8; D.to_int a; A.to_int b ]
   | Add (a, b, c) -> [ 9; D.to_int a; D.to_int b; D.to_int c ]
   | Rmem (a, b) -> [ 15; D.to_int a; A.to_int b ]
   | Wmem (a, b) -> [ 16; A.to_int a; D.to_int b ]
@@ -70,7 +76,7 @@ let%expect_test "multiple noops" =
 ;;
 
 let%expect_test "out" =
-  run_vm [ Set (R4, D.of_int 65); Out (R4 |> RI.to_int |> D.of_int); Halt ];
+  run_vm [ Set (R4, D.of_int 65); Out (to_d R4); Halt ];
   [%expect {|A|}]
 ;;
 
@@ -78,11 +84,8 @@ let%expect_test "add" =
   run_vm
     [ Set (R6, D.of_int 32)
     ; Set (R2, D.of_int 10)
-    ; Add
-        ( R3 |> RI.to_int |> D.of_int
-        , R2 |> RI.to_int |> D.of_int
-        , R6 |> RI.to_int |> D.of_int )
-    ; Out (R3 |> RI.to_int |> D.of_int)
+    ; Add (to_d R3, to_d R2, to_d R6)
+    ; Out (to_d R3)
     ; Halt
     ];
   [%expect {|*|}]
@@ -91,30 +94,30 @@ let%expect_test "add" =
 let%expect_test "push and pop" =
   run_vm
     [ Set (R1, D.of_int 55)
-    ; Push (R1 |> RI.to_int |> D.of_int)
+    ; Push (to_d R1)
     ; Set (R1, D.of_int 48)
-    ; Push (R1 |> RI.to_int |> D.of_int)
-    ; Pop (R2 |> RI.to_int |> D.of_int)
-    ; Out (R2 |> RI.to_int |> D.of_int) (* ascii 48 = '0' *)
-    ; Out (R2 |> RI.to_int |> D.of_int) (* ascii 48 = '0' *)
-    ; Pop (R3 |> RI.to_int |> D.of_int)
-    ; Out (R3 |> RI.to_int |> D.of_int) (* ascii 55 = '7' *)
+    ; Push (to_d R1)
+    ; Pop (to_d R2)
+    ; Out (to_d R2) (* ascii 48 = '0' *)
+    ; Out (to_d R2) (* ascii 48 = '0' *)
+    ; Pop (to_d R3)
+    ; Out (to_d R3) (* ascii 55 = '7' *)
     ; Halt
     ];
   [%expect {|007|}]
 ;;
 
 let%expect_test "pop throws on empty stack" =
-  run_vm [ Pop (R3 |> RI.to_int |> D.of_int); Halt ];
+  run_vm [ Pop (to_d R3); Halt ];
   [%expect {|unhandled exn: Failure("stack empty")|}]
 ;;
 
 let%expect_test "rmem and wmem" =
   run_vm
     [ Set (R0, D.of_int 50)
-    ; Wmem (A.of_int 12345, R0 |> RI.to_int |> D.of_int)
-    ; Rmem (R1 |> RI.to_int |> D.of_int, A.of_int 12345)
-    ; Out (R1 |> RI.to_int |> D.of_int)
+    ; Wmem (A.of_int 12345, to_d R0)
+    ; Rmem (to_d R1, A.of_int 12345)
+    ; Out (to_d R1)
     ; (* ascii 50 = '2' *)
       Halt
     ];
@@ -124,14 +127,12 @@ let%expect_test "rmem and wmem" =
 let%expect_test "eq" =
   run_vm
     [ Set (R0, D.of_int 51)
-    ; Eq (R1 |> RI.to_int |> D.of_int, R0 |> RI.to_int |> D.of_int, D.of_int 49)
-    ; Eq (R2 |> RI.to_int |> D.of_int, R0 |> RI.to_int |> D.of_int, D.of_int 51)
-    ; Add (R3 |> RI.to_int |> D.of_int, R1 |> RI.to_int |> D.of_int, D.of_int 50)
-      (* 50 + 0 = 50 (ascii 2) *)
-    ; Add (R4 |> RI.to_int |> D.of_int, R2 |> RI.to_int |> D.of_int, D.of_int 50)
-      (* 50 + 1 = 51 (ascii 3) *)
-    ; Out (R3 |> RI.to_int |> D.of_int)
-    ; Out (R4 |> RI.to_int |> D.of_int)
+    ; Eq (to_d R1, to_d R0, D.of_int 49)
+    ; Eq (to_d R2, to_d R0, D.of_int 51)
+    ; Add (to_d R3, to_d R1, D.of_int 50) (* 50 + 0 = 50 (ascii 2) *)
+    ; Add (to_d R4, to_d R2, D.of_int 50) (* 50 + 1 = 51 (ascii 3) *)
+    ; Out (to_d R3)
+    ; Out (to_d R4)
     ; Halt
     ];
   [%expect {|23|}]
@@ -140,28 +141,56 @@ let%expect_test "eq" =
 let%expect_test "gt" =
   run_vm
     [ Set (R0, D.of_int 123)
-    ; Gt (R1 |> RI.to_int |> D.of_int, D.of_int 150, R0 |> RI.to_int |> D.of_int)
-    ; Gt (R2 |> RI.to_int |> D.of_int, R0 |> RI.to_int |> D.of_int, D.of_int 200)
-    ; Add (R3 |> RI.to_int |> D.of_int, R1 |> RI.to_int |> D.of_int, D.of_int 50)
-      (* 50 + 1 = 51 (ascii 3) *)
-    ; Add (R4 |> RI.to_int |> D.of_int, R2 |> RI.to_int |> D.of_int, D.of_int 50)
-      (* 50 + 0 = 50 (ascii 2) *)
-    ; Out (R3 |> RI.to_int |> D.of_int)
-    ; Out (R4 |> RI.to_int |> D.of_int)
+    ; Gt (to_d R1, D.of_int 150, to_d R0)
+    ; Gt (to_d R2, to_d R0, D.of_int 200)
+    ; Add (to_d R3, to_d R1, D.of_int 50) (* 50 + 1 = 51 (ascii 3) *)
+    ; Add (to_d R4, to_d R2, D.of_int 50) (* 50 + 0 = 50 (ascii 2) *)
+    ; Out (to_d R3)
+    ; Out (to_d R4)
     ; Halt
     ];
   [%expect {|32|}]
 ;;
 
-let%expect_test "gt" =
+let%expect_test "jmp" =
   run_vm
     [ Noop
     ; Jmp (A.of_int 5)
-    ; Out (D.of_int 48) (* ascii 0, skipped over *)
-    ; Out (D.of_int 49) (* ascii 1 *)
+    ; Out (D.of_int 48) (* ascii 0 *)
+    ; Out (D.of_int 49) (* <-- (jmp) ascii 1 *)
     ; Halt
     ];
   [%expect {|1|}]
+;;
+
+let%expect_test "jt" =
+  run_vm
+    [ Noop
+    ; Eq (R3 |> RI.to_int |> D.of_int, D.of_int 1, D.of_int 2)
+    ; Jt (to_d R3, A.of_int 10)
+    ; Out (D.of_int 48) (* ascii 0 *)
+    ; Eq (R4 |> RI.to_int |> D.of_int, D.of_int 1, D.of_int 1)
+    ; Jt (to_d R4, A.of_int 19)
+    ; Out (D.of_int 49) (* ascii 1 *)
+    ; Out (D.of_int 50) (* <-- (jt) ascii 2 *)
+    ; Halt
+    ];
+  [%expect {|02|}]
+;;
+
+let%expect_test "jf" =
+  run_vm
+    [ Noop
+    ; Eq (R3 |> RI.to_int |> D.of_int, D.of_int 1, D.of_int 2)
+    ; Jf (to_d R3, A.of_int 10)
+    ; Out (D.of_int 48) (* ascii 0 *)
+    ; Eq (R4 |> RI.to_int |> D.of_int, D.of_int 1, D.of_int 1) (* <-- (jf) *)
+    ; Jf (to_d R4, A.of_int 19)
+    ; Out (D.of_int 49) (* ascii 1 *)
+    ; Out (D.of_int 50) (* ascii 2 *)
+    ; Halt
+    ];
+  [%expect {|12|}]
 ;;
 (* let%expect_test "from spec" = *)
 (*   run_vm_ints [ 9; 32768; 32769; 4; 19; 32768; 0 ]; *)

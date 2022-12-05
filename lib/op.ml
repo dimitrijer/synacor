@@ -79,6 +79,36 @@ let specs =
             let* _ = put { state with pc = dst } in
             return false)
     }
+  ; (* [jt (reg|lit) mem] *)
+    { name = "jt"
+    ; opcode = 7
+    ; exec =
+        State.(
+          fun () ->
+            let* op = load_reg_or_lit () in
+            let* dst = fetch_addr () in
+            let* state = get () in
+            if D.to_int op = 1
+            then
+              let* _ = put { state with pc = dst } in
+              return false
+            else return false)
+    }
+  ; (* [jf (reg|lit) mem] *)
+    { name = "jf"
+    ; opcode = 8
+    ; exec =
+        State.(
+          fun () ->
+            let* op = load_reg_or_lit () in
+            let* dst = fetch_addr () in
+            let* state = get () in
+            if D.to_int op = 0
+            then
+              let* _ = put { state with pc = dst } in
+              return false
+            else return false)
+    }
   ; (* [add (reg|mem) (reg|lit) (reg|lit)] *)
     { name = "add"
     ; opcode = 9
