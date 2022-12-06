@@ -35,13 +35,12 @@ let fetch_addr () =
     | None -> return (d |> D.to_int |> A.of_int))
 ;;
 
-let fetch_lit () =
+let load_reg_or_lit () =
   State.(
     let* d = fetch_data () in
-    (* Literals have same range as addresses. *)
-    match A.of_int_opt (D.to_int d) with
-    | Some _ -> return d
-    | None -> failwith @@ Printf.sprintf "not a literal: %d" (D.to_int d))
+    match d |> D.to_int |> RI.of_int_opt with
+    | Some r -> read_reg r
+    | None -> return d)
 ;;
 
 let fetch_reg_or_addr () =
@@ -50,23 +49,6 @@ let fetch_reg_or_addr () =
     match RI.of_int_opt (D.to_int d) with
     | Some r -> return @@ Either.left r
     | None -> return @@ Either.right (d |> D.to_int |> A.of_int))
-;;
-
-let load_reg_or_lit () =
-  State.(
-    let* d = fetch_data () in
-    match d |> D.to_int |> RI.of_int_opt with
-    | Some r -> read_reg r
-    | None -> return d)
-
-let load_reg_or_addr_indir () =
-  State.(
-    let* r_or_a = fetch_reg_or_addr () in
-    match r_or_a with
-    | Either.Left r ->
-      let* a = read_reg r in
-      read_mem (a |> D.to_int |> A.of_int)
-    | Either.Right a -> read_mem a)
 ;;
 
 let write_reg_or_addr a v =
