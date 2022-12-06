@@ -71,12 +71,14 @@ let run_vm ops =
 
 let%expect_test "uninitialized" =
   run_vm [];
-  [%expect {|unhandled exn: Failure("no such opcode: 65535")|}]
+  (* uninitialized mem contains 0, which is halt *)
+  [%expect {||}]
 ;;
 
 let%expect_test "no halt" =
   run_vm [ Noop ];
-  [%expect {|unhandled exn: Failure("no such opcode: 65535")|}]
+  (* uninitialized mem contains 0, which is halt *)
+  [%expect {||}]
 ;;
 
 let%expect_test "noop" =

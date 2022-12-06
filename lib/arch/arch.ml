@@ -2,7 +2,7 @@ module Data_Impl = struct
   type t = int
 
   (* Invalid value that is still in 16-bit range. *)
-  let undef = Int.shift_left 1 16 - 1
+  let undef = 0
 
   (* Includes register address range. *)
   let max = 32775
