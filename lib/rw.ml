@@ -58,6 +58,15 @@ let load_reg_or_lit () =
     match d |> D.to_int |> RI.of_int_opt with
     | Some r -> read_reg r
     | None -> return d)
+
+let load_reg_or_addr_indir () =
+  State.(
+    let* r_or_a = fetch_reg_or_addr () in
+    match r_or_a with
+    | Either.Left r ->
+      let* a = read_reg r in
+      read_mem (a |> D.to_int |> A.of_int)
+    | Either.Right a -> read_mem a)
 ;;
 
 let write_reg_or_addr a v =

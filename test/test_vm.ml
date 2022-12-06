@@ -19,8 +19,8 @@ type op =
   | And of (D.t * D.t * D.t)
   | Or of (D.t * D.t * D.t)
   | Not of (D.t * D.t)
-  | Rmem of (D.t * A.t)
-  | Wmem of (A.t * D.t)
+  | Rmem of (D.t * D.t)
+  | Wmem of (D.t * D.t)
   | Call of A.t
   | Ret
   | Out of D.t
@@ -43,8 +43,8 @@ let to_ints op =
   | And (a, b, c) -> [ 12; D.to_int a; D.to_int b; D.to_int c ]
   | Or (a, b, c) -> [ 13; D.to_int a; D.to_int b; D.to_int c ]
   | Not (a, b) -> [ 14; D.to_int a; D.to_int b ]
-  | Rmem (a, b) -> [ 15; D.to_int a; A.to_int b ]
-  | Wmem (a, b) -> [ 16; A.to_int a; D.to_int b ]
+  | Rmem (a, b) -> [ 15; D.to_int a; D.to_int b ]
+  | Wmem (a, b) -> [ 16; D.to_int a; D.to_int b ]
   | Call a -> [ 17; A.to_int a ]
   | Ret -> [ 18 ]
   | Out a -> [ 19; D.to_int a ]
@@ -191,14 +191,36 @@ let%expect_test "pop throws on empty stack" =
 
 let%expect_test "rmem and wmem" =
   run_vm
-    [ Set (R0, D.of_int 50)
-    ; Wmem (A.of_int 12345, to_d R0)
-    ; Rmem (to_d R1, A.of_int 12345)
-    ; Out (to_d R1)
-    ; (* ascii 50 = '2' *)
-      Halt
+    [ Wmem (D.of_int 11, D.of_int 50)
+    ; Rmem (to_d R1, D.of_int 11)
+    ; Out (to_d R1) (* ascii 50 = '2' *)
+    ; Halt
+    ; Noop
+    ; Noop
+    ; Noop
+    ; Noop
     ];
   [%expect {|2|}]
+;;
+
+let%expect_test "rmem and wmem indir" =
+  run_vm
+    [ Noop
+    ; Noop
+    ; Noop
+    ; Set (R1, D.of_int 50) (* ascii 50 = 2 *)
+    ; Noop
+    ; Noop
+    ; Noop
+    ; Set (R0, D.of_int 5) (* pc 5 = operand to set above *)
+    ; Rmem (to_d R1, to_d R0)
+    ; Out (to_d R1)
+    ; Wmem (to_d R0, D.of_int 57) (* write 57 to addr 5 *)
+    ; Rmem (to_d R3, to_d R0)
+    ; Out (to_d R3) (* ascii 57 = '9' *)
+    ; Halt
+    ];
+  [%expect {|29|}]
 ;;
 
 let%expect_test "eq" =

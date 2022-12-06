@@ -186,28 +186,43 @@ let specs =
             let* _ = write_reg_or_addr dst v in
             return false)
     }
-  ; (* [rmem (reg|mem) mem] *)
+  ; (* [rmem (reg|mem) (reg|mem)] *)
     { name = "rmem"
     ; opcode = 15
     ; exec =
         State.(
           fun () ->
             let* dst = fetch_reg_or_addr () in
-            let* src = fetch_addr () in
-            let* srcv = read_mem src in
-            let* _ = write_reg_or_addr dst srcv in
-            return false)
+            let* src = fetch_reg_or_addr () in
+            match src with
+            | Either.Left r ->
+              (* indirect addressing via register *)
+              let* a = read_reg r in
+              let* v = read_mem (a |> D.to_int |> A.of_int) in
+              let* _ = write_reg_or_addr dst v in
+              return false
+            | Either.Right a ->
+              let* v = read_mem a in
+              let* _ = write_reg_or_addr dst v in
+              return false)
     }
-  ; (* [wmem (reg|mem) mem] *)
+  ; (* [wmem (reg|mem) (reg|lit)] *)
     { name = "wmem"
     ; opcode = 16
     ; exec =
         State.(
           fun () ->
-            let* dst = fetch_addr () in
-            let* srcv = load_reg_or_lit () in
-            let* _ = write_mem dst srcv in
-            return false)
+            let* dst = fetch_reg_or_addr () in
+            let* v = load_reg_or_lit () in
+            match dst with
+            | Either.Left r ->
+              (* indirect addressing via register *)
+              let* a = read_reg r in
+              let* _ = write_mem (a |> D.to_int |> A.of_int) v in
+              return false
+            | Either.Right a ->
+              let* _ = write_mem a v in
+              return false)
     }
   ; (* [call mem] *)
     { name = "call"
