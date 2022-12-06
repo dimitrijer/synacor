@@ -91,7 +91,12 @@ let%expect_test "multiple noops" =
   [%expect {||}]
 ;;
 
-let%expect_test "out" =
+let%expect_test "set with register input" =
+  run_vm [ Set (R3, D.of_int 66); Set (R4, to_d R3); Out (to_d R4); Halt ];
+  [%expect {|B|}]
+;;
+
+let%expect_test "set and out" =
   run_vm [ Set (R4, D.of_int 65); Out (to_d R4); Halt ];
   [%expect {|A|}]
 ;;

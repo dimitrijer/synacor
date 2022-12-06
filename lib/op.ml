@@ -10,15 +10,15 @@ type spec =
 let specs =
   [ (* [halt] *)
     { name = "halt"; opcode = 0; exec = State.(fun _ -> return true) }
-  ; (* [set reg lit] *)
+  ; (* [set reg (reg|lit)] *)
     { name = "set"
     ; opcode = 1
     ; exec =
         State.(
           fun () ->
             let* r = fetch_reg () in
-            let* lit = fetch_lit () in
-            let* _ = write_reg r lit in
+            let* v = load_reg_or_lit () in
+            let* _ = write_reg r v in
             return false)
     }
   ; (* [push (reg|lit)] *)
