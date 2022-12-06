@@ -21,7 +21,7 @@ type op =
   | Not of (D.t * D.t)
   | Rmem of (D.t * D.t)
   | Wmem of (D.t * D.t)
-  | Call of A.t
+  | Call of D.t
   | Ret
   | Out of D.t
   | Halt
@@ -45,7 +45,7 @@ let to_ints op =
   | Not (a, b) -> [ 14; D.to_int a; D.to_int b ]
   | Rmem (a, b) -> [ 15; D.to_int a; D.to_int b ]
   | Wmem (a, b) -> [ 16; D.to_int a; D.to_int b ]
-  | Call a -> [ 17; A.to_int a ]
+  | Call a -> [ 17; D.to_int a ]
   | Ret -> [ 18 ]
   | Out a -> [ 19; D.to_int a ]
   | Noop -> [ 21 ]
@@ -309,13 +309,39 @@ let%expect_test "jf" =
 
 let%expect_test "call and ret" =
   run_vm
-    [ Call (A.of_int 17)
-    ; Call (A.of_int 23)
-    ; Call (A.of_int 17)
+    [ Call (D.of_int 17)
+    ; Call (D.of_int 23)
+    ; Call (D.of_int 17)
     ; Out (D.of_int 48) (* ascii 0 *)
-    ; Call (A.of_int 17)
-    ; Call (A.of_int 17)
-    ; Call (A.of_int 23)
+    ; Call (D.of_int 17)
+    ; Call (D.of_int 17)
+    ; Call (D.of_int 23)
+    ; Halt
+    ; Noop
+    ; Noop
+    ; Noop
+    ; Out (D.of_int 49) (* ascii 1 *)
+    ; Ret
+    ; Noop
+    ; Noop
+    ; Noop
+    ; Out (D.of_int 50) (* ascii 2 *)
+    ; Ret
+    ];
+  [%expect {|1210112|}]
+;;
+
+let%expect_test "call and ret indirect" =
+  run_vm
+    [ Set (R0, D.of_int 22)
+    ; Set (R1, D.of_int 28)
+    ; Call (to_d R0)
+    ; Call (to_d R1)
+    ; Call (to_d R0)
+    ; Out (D.of_int 48) (* ascii 0 *)
+    ; Call (to_d R0)
+    ; Call (to_d R0)
+    ; Call (to_d R1)
     ; Halt
     ; Noop
     ; Noop

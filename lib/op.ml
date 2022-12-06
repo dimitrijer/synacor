@@ -224,18 +224,24 @@ let specs =
               let* _ = write_mem a v in
               return false)
     }
-  ; (* [call mem] *)
+  ; (* [call (reg|mem)] *)
     { name = "call"
     ; opcode = 17
     ; exec =
         State.(
           fun () ->
-            let* dst = fetch_addr () in
+            let* dst = fetch_reg_or_addr () in
             let* state = get () in
             let* _ = push (state.pc |> A.to_int |> D.of_int) in
+            (* stack state changed, so we do another get *)
             let* state' = get () in
-            (* stack state changed *)
-            let* _ = put { state' with pc = dst } in
+            let* _ =
+              match dst with
+              | Either.Left r ->
+                (* indirect addressing via register *)
+                put { state' with pc = R.read r state'.reg |> D.to_int |> A.of_int }
+              | Either.Right a -> put { state' with pc = a }
+            in
             return false)
     }
   ; (* [ret] *)
