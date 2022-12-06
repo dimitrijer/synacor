@@ -356,3 +356,8 @@ let%expect_test "call and ret indirect" =
     ];
   [%expect {|1210112|}]
 ;;
+
+let%expect_test "ret on empty stack halts" =
+  run_vm [ Ret ];
+  [%expect {||}]
+;;

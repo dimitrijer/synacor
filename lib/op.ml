@@ -250,13 +250,15 @@ let specs =
     ; exec =
         State.(
           fun () ->
-            try
+            let* state = get () in
+            if S.is_empty state.stack
+            then return true
+            else
               let* dst = pop () in
-              let* state = get () in
-              let* _ = put { state with pc = dst |> D.to_int |> A.of_int } in
-              return false
-            with
-            | S.Stack_Empty -> return true)
+              (* have to get state again, we popped *)
+              let* state' = get () in
+              let* _ = put { state' with pc = dst |> D.to_int |> A.of_int } in
+              return false)
     }
   ; (* [out (reg|lit)] *)
     { name = "out"
