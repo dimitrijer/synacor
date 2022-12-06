@@ -51,8 +51,8 @@ let specs =
             let* dst = fetch_reg_or_addr () in
             let* op1 = load_reg_or_lit () in
             let* op2 = load_reg_or_lit () in
-            let result = D.of_int @@ if D.eq op1 op2 then 1 else 0 in
-            let* _ = write_reg_or_addr dst result in
+            let v = D.of_int @@ if D.eq op1 op2 then 1 else 0 in
+            let* _ = write_reg_or_addr dst v in
             return false)
     }
   ; (* [gt (reg|mem) (reg|lit) (reg|lit)] *)
@@ -64,8 +64,8 @@ let specs =
             let* dst = fetch_reg_or_addr () in
             let* op1 = load_reg_or_lit () in
             let* op2 = load_reg_or_lit () in
-            let result = D.of_int @@ if D.gt op1 op2 then 1 else 0 in
-            let* _ = write_reg_or_addr dst result in
+            let v = D.of_int @@ if D.gt op1 op2 then 1 else 0 in
+            let* _ = write_reg_or_addr dst v in
             return false)
     }
   ; (* [jmp mem *)
@@ -118,8 +118,8 @@ let specs =
             let* dst = fetch_reg_or_addr () in
             let* op1 = load_reg_or_lit () in
             let* op2 = load_reg_or_lit () in
-            let result = D.add op1 op2 in
-            let* _ = write_reg_or_addr dst result in
+            let v = D.add op1 op2 in
+            let* _ = write_reg_or_addr dst v in
             return false)
     }
   ; (* [mult (reg|mem) (reg|lit) (reg|lit)] *)
@@ -131,8 +131,8 @@ let specs =
             let* dst = fetch_reg_or_addr () in
             let* op1 = load_reg_or_lit () in
             let* op2 = load_reg_or_lit () in
-            let result = D.mult op1 op2 in
-            let* _ = write_reg_or_addr dst result in
+            let v = D.mult op1 op2 in
+            let* _ = write_reg_or_addr dst v in
             return false)
     }
   ; (* [mod (reg|mem) (reg|lit) (reg|lit)] *)
@@ -144,8 +144,8 @@ let specs =
             let* dst = fetch_reg_or_addr () in
             let* op1 = load_reg_or_lit () in
             let* op2 = load_reg_or_lit () in
-            let result = D.modu op1 op2 in
-            let* _ = write_reg_or_addr dst result in
+            let v = D.modu op1 op2 in
+            let* _ = write_reg_or_addr dst v in
             return false)
     }
   ; (* [and (reg|mem) (reg|lit) (reg|lit)] *)
@@ -157,8 +157,8 @@ let specs =
             let* dst = fetch_reg_or_addr () in
             let* op1 = load_reg_or_lit () in
             let* op2 = load_reg_or_lit () in
-            let result = D.logand op1 op2 in
-            let* _ = write_reg_or_addr dst result in
+            let v = D.logand op1 op2 in
+            let* _ = write_reg_or_addr dst v in
             return false)
     }
   ; (* [or (reg|mem) (reg|lit) (reg|lit)] *)
@@ -170,8 +170,8 @@ let specs =
             let* dst = fetch_reg_or_addr () in
             let* op1 = load_reg_or_lit () in
             let* op2 = load_reg_or_lit () in
-            let result = D.logor op1 op2 in
-            let* _ = write_reg_or_addr dst result in
+            let v = D.logor op1 op2 in
+            let* _ = write_reg_or_addr dst v in
             return false)
     }
   ; (* [not (reg|mem) (reg|lit)] *)
@@ -182,8 +182,8 @@ let specs =
           fun () ->
             let* dst = fetch_reg_or_addr () in
             let* op = load_reg_or_lit () in
-            let result = D.lognot op in
-            let* _ = write_reg_or_addr dst result in
+            let v = D.lognot op in
+            let* _ = write_reg_or_addr dst v in
             return false)
     }
   ; (* [rmem (reg|mem) mem] *)
