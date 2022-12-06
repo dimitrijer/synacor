@@ -87,9 +87,9 @@ let specs =
           fun () ->
             let* op = load_reg_or_lit () in
             let* dst = fetch_addr () in
-            let* state = get () in
-            if D.to_int op = 1
+            if not (D.eq op (D.of_int 0))
             then
+              let* state = get () in
               let* _ = put { state with pc = dst } in
               return false
             else return false)
@@ -102,9 +102,9 @@ let specs =
           fun () ->
             let* op = load_reg_or_lit () in
             let* dst = fetch_addr () in
-            let* state = get () in
-            if D.to_int op = 0
+            if D.eq op (D.of_int 0)
             then
+              let* state = get () in
               let* _ = put { state with pc = dst } in
               return false
             else return false)

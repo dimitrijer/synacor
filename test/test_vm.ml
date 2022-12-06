@@ -243,11 +243,26 @@ let%expect_test "jmp" =
 let%expect_test "jt" =
   run_vm
     [ Noop
-    ; Eq (R3 |> RI.to_int |> D.of_int, D.of_int 1, D.of_int 2)
+    ; Eq (to_d R3, D.of_int 1, D.of_int 2)
     ; Jt (to_d R3, A.of_int 10)
     ; Out (D.of_int 48) (* ascii 0 *)
-    ; Eq (R4 |> RI.to_int |> D.of_int, D.of_int 1, D.of_int 1)
+    ; Eq (to_d R4, D.of_int 1, D.of_int 1)
     ; Jt (to_d R4, A.of_int 19)
+    ; Out (D.of_int 49) (* ascii 1 *)
+    ; Out (D.of_int 50) (* <-- (jt) ascii 2 *)
+    ; Halt
+    ];
+  [%expect {|02|}]
+;;
+
+let%expect_test "jt jumps when != 1" =
+  run_vm
+    [ Noop
+    ; Set (R3, D.of_int 0)
+    ; Jt (to_d R3, A.of_int 9)
+    ; Out (D.of_int 48) (* ascii 0 *)
+    ; Set (R4, D.of_int 7777)
+    ; Jt (to_d R4, A.of_int 17)
     ; Out (D.of_int 49) (* ascii 1 *)
     ; Out (D.of_int 50) (* <-- (jt) ascii 2 *)
     ; Halt
