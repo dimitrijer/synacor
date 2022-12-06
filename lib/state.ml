@@ -2,8 +2,7 @@ type ('s, 'a) t = 's -> 'a * 's
 
 let bind ma f state =
   let a, s' = ma state in
-  let b, s'' = f a s' in
-  b, s''
+  f a s'
 ;;
 
 let return a state = a, state
