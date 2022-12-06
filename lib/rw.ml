@@ -56,3 +56,19 @@ let write_reg_or_addr a v =
   | Either.Left r -> write_reg r v
   | Either.Right a -> write_mem a v
 ;;
+
+let rec next_char () =
+  State.(
+    let* state = get () in
+    if String.length state.inbuf > 0
+    then
+      let* _ =
+        put
+          { state with inbuf = String.sub state.inbuf 1 (String.length state.inbuf - 1) }
+      in
+      return @@ String.get state.inbuf 0
+    else (
+      let line = read_line () in
+      let* _ = put { state with inbuf = line } in
+      next_char ()))
+;;

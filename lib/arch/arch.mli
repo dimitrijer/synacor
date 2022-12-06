@@ -4,7 +4,8 @@ module D : Data.DATA
 (** [A] is [ADDR] module implementation for Synacor arch memory addresses. *)
 module A : Data.ADDR
 
-(** [RI] is [ADDR] module implementation for Synacor arch register identifiers. *)
+(** [RI] is [ADDR] module implementation for Synacor arch register identifiers.
+ *)
 module RI : Data.ADDR with type t = Reg.r
 
 (** [M] is the memory module of Synacor arch. *)
@@ -20,7 +21,12 @@ module S : module type of Stack
     state monad [State.t]. *)
 type t =
   { pc : A.t (* program counter *)
-  ; mem : M.t
-  ; stack : D.t S.t
-  ; reg : R.t
+  ; mem : M.t (* main memory *)
+  ; stack : D.t S.t (* stack, unbounded *)
+  ; reg : R.t (* registers *)
+  ; inbuf : string (* stdin buffer *)
   }
+
+(* [create m] creates a new VM initial state, with memory set to [m] and input
+   buffer optionally set to [inbuf]. *)
+val create : ?inbuf:string -> M.t -> t

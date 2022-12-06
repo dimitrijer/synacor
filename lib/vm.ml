@@ -12,21 +12,16 @@ let rec load_mem (bs : bytes) (mem : M.t) (a : A.t) =
     load_mem bs' mem' (A.incr a)
 ;;
 
-let of_bytes (bs : bytes) =
-  { pc = A.low; mem = load_mem bs M.empty A.low; reg = R.empty; stack = S.empty }
+let of_bytes ?(inbuf = String.empty) bs = create ~inbuf @@ load_mem bs M.empty A.low
+
+let of_ints is =
+  create
+  @@ fst
+  @@ List.fold_left
+       (fun (mem, a) i -> M.write a (D.of_int i) mem, A.incr a)
+       (M.empty, A.low)
+       is
 ;;
 
-let of_ints (is : int list) =
-  { pc = A.low
-  ; mem =
-      fst
-      @@ List.fold_left
-           (fun (mem, a) i -> M.write a (D.of_int i) mem, A.incr a)
-           (M.empty, A.low)
-           is
-  ; reg = R.empty
-  ; stack = S.empty
-  }
-;;
-
+(** [run s] runs VM at state [s]. *)
 let run state = snd @@ Op.run_until_halt () state

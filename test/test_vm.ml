@@ -24,6 +24,7 @@ type op =
   | Call of D.t
   | Ret
   | Out of D.t
+  | In of RI.t
   | Halt
 
 let to_ints op =
@@ -48,6 +49,7 @@ let to_ints op =
   | Call a -> [ 17; D.to_int a ]
   | Ret -> [ 18 ]
   | Out a -> [ 19; D.to_int a ]
+  | In r -> [ 20; RI.to_int r ]
   | Noop -> [ 21 ]
 ;;
 
@@ -64,8 +66,8 @@ let run_vm_ints (is : int list) =
   | e -> Printf.printf "unhandled exn: %s" (Printexc.to_string e)
 ;;
 
-let run_vm ops =
-  try ignore @@ Vm.run (Vm.of_bytes (bytecode ops)) with
+let run_vm ?(inbuf = String.empty) ops =
+  try ignore @@ Vm.run (Vm.of_bytes ~inbuf (bytecode ops)) with
   | e -> Printf.printf "%s" (Printexc.to_string e)
 ;;
 
@@ -360,4 +362,19 @@ let%expect_test "call and ret indirect" =
 let%expect_test "ret on empty stack halts" =
   run_vm [ Ret ];
   [%expect {||}]
+;;
+
+let%expect_test "in" =
+  run_vm
+    ~inbuf:"abcd"
+    [ In R0
+    ; In R1
+    ; In R2
+    ; Out (to_d R0)
+    ; Out (to_d R1)
+    ; Out (to_d R2)
+    ; In R3
+    ; Out (to_d R3)
+    ];
+  [%expect {|abcd|}]
 ;;

@@ -31,7 +31,7 @@ let specs =
             let* _ = push op in
             return false)
     }
-  ; (* [pop (reg|mem)] *)
+  ; (* [pop (reg|addr)] *)
     { name = "pop"
     ; opcode = 3
     ; exec =
@@ -42,7 +42,7 @@ let specs =
             let* _ = write_reg_or_addr dst v in
             return false)
     }
-  ; (* [eq (reg|mem) (reg|lit) (reg|lit)] *)
+  ; (* [eq (reg|addr) (reg|lit) (reg|lit)] *)
     { name = "eq"
     ; opcode = 4
     ; exec =
@@ -55,7 +55,7 @@ let specs =
             let* _ = write_reg_or_addr dst v in
             return false)
     }
-  ; (* [gt (reg|mem) (reg|lit) (reg|lit)] *)
+  ; (* [gt (reg|addr) (reg|lit) (reg|lit)] *)
     { name = "gt"
     ; opcode = 5
     ; exec =
@@ -68,7 +68,7 @@ let specs =
             let* _ = write_reg_or_addr dst v in
             return false)
     }
-  ; (* [jmp mem *)
+  ; (* [jmp addr *)
     { name = "jmp"
     ; opcode = 6
     ; exec =
@@ -79,7 +79,7 @@ let specs =
             let* _ = put { state with pc = dst } in
             return false)
     }
-  ; (* [jt (reg|lit) mem] *)
+  ; (* [jt (reg|lit) addr] *)
     { name = "jt"
     ; opcode = 7
     ; exec =
@@ -94,7 +94,7 @@ let specs =
               return false
             else return false)
     }
-  ; (* [jf (reg|lit) mem] *)
+  ; (* [jf (reg|lit) addr] *)
     { name = "jf"
     ; opcode = 8
     ; exec =
@@ -109,7 +109,7 @@ let specs =
               return false
             else return false)
     }
-  ; (* [add (reg|mem) (reg|lit) (reg|lit)] *)
+  ; (* [add (reg|addr) (reg|lit) (reg|lit)] *)
     { name = "add"
     ; opcode = 9
     ; exec =
@@ -122,7 +122,7 @@ let specs =
             let* _ = write_reg_or_addr dst v in
             return false)
     }
-  ; (* [mult (reg|mem) (reg|lit) (reg|lit)] *)
+  ; (* [mult (reg|addr) (reg|lit) (reg|lit)] *)
     { name = "mult"
     ; opcode = 10
     ; exec =
@@ -135,7 +135,7 @@ let specs =
             let* _ = write_reg_or_addr dst v in
             return false)
     }
-  ; (* [mod (reg|mem) (reg|lit) (reg|lit)] *)
+  ; (* [mod (reg|addr) (reg|lit) (reg|lit)] *)
     { name = "mod"
     ; opcode = 11
     ; exec =
@@ -148,7 +148,7 @@ let specs =
             let* _ = write_reg_or_addr dst v in
             return false)
     }
-  ; (* [and (reg|mem) (reg|lit) (reg|lit)] *)
+  ; (* [and (reg|addr) (reg|lit) (reg|lit)] *)
     { name = "and"
     ; opcode = 12
     ; exec =
@@ -161,7 +161,7 @@ let specs =
             let* _ = write_reg_or_addr dst v in
             return false)
     }
-  ; (* [or (reg|mem) (reg|lit) (reg|lit)] *)
+  ; (* [or (reg|addr) (reg|lit) (reg|lit)] *)
     { name = "or"
     ; opcode = 13
     ; exec =
@@ -174,7 +174,7 @@ let specs =
             let* _ = write_reg_or_addr dst v in
             return false)
     }
-  ; (* [not (reg|mem) (reg|lit)] *)
+  ; (* [not (reg|addr) (reg|lit)] *)
     { name = "not"
     ; opcode = 14
     ; exec =
@@ -186,7 +186,7 @@ let specs =
             let* _ = write_reg_or_addr dst v in
             return false)
     }
-  ; (* [rmem (reg|mem) (reg|mem)] *)
+  ; (* [rmem (reg|addr) (reg|addr)] *)
     { name = "rmem"
     ; opcode = 15
     ; exec =
@@ -206,7 +206,7 @@ let specs =
               let* _ = write_reg_or_addr dst v in
               return false)
     }
-  ; (* [wmem (reg|mem) (reg|lit)] *)
+  ; (* [wmem (reg|addr) (reg|lit)] *)
     { name = "wmem"
     ; opcode = 16
     ; exec =
@@ -224,7 +224,7 @@ let specs =
               let* _ = write_mem a v in
               return false)
     }
-  ; (* [call (reg|mem)] *)
+  ; (* [call (reg|addr)] *)
     { name = "call"
     ; opcode = 17
     ; exec =
@@ -268,6 +268,17 @@ let specs =
           fun () ->
             let* op = load_reg_or_lit () in
             print_char (op |> D.to_int |> Char.chr);
+            return false)
+    }
+  ; (* [in reg] *)
+    { name = "in"
+    ; opcode = 20
+    ; exec =
+        State.(
+          fun () ->
+            let* dst = fetch_reg () in
+            let* c = next_char () in
+            let* _ = write_reg dst (c |> Char.code |> D.of_int) in
             return false)
     }
   ; (* [noop] *)

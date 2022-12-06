@@ -1,5 +1,5 @@
 (** [of_bytes bs] decodes [bs] to VM memory state. *)
-val of_bytes : bytes -> Arch.t
+val of_bytes : ?inbuf:string -> bytes -> Arch.t
 
 (** [of_ints is] decodes integers [is] to VM memory state. *)
 val of_ints : int list -> Arch.t

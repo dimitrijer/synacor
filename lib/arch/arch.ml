@@ -102,4 +102,9 @@ type t =
   ; mem : M.t
   ; stack : D.t S.t
   ; reg : R.t
+  ; inbuf : string
   }
+
+let create ?(inbuf = String.empty) mem =
+  { pc = A.low; mem; stack = S.empty; reg = R.empty; inbuf }
+;;
