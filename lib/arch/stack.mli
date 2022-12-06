@@ -12,3 +12,6 @@ val push : 'a -> 'a t -> 'a t
 (** [pop s] pops value from the top of [s], and returns that value and popped
     stack. It throws an exception if [s] is empty. *)
 val pop : 'a t -> 'a * 'a t
+
+(** [is_empty s] returns true when [s] is empty. *)
+val is_empty : 'a t -> bool

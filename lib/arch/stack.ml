@@ -10,4 +10,9 @@ let pop = function
   | hd :: tl -> hd, tl
 ;;
 
+let is_empty = function
+  | [] -> true
+  | _ -> false
+;;
+
 let%test "test push pop" = empty |> push 0 |> push 10 |> pop = (10, [ 0 ])
