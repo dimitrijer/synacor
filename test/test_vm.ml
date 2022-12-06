@@ -66,7 +66,7 @@ let run_vm_ints (is : int list) =
 
 let run_vm ops =
   try ignore @@ Vm.run (Vm.of_bytes (bytecode ops)) with
-  | e -> Printf.printf "unhandled exn: %s" (Printexc.to_string e)
+  | e -> Printf.printf "%s" (Printexc.to_string e)
 ;;
 
 let%expect_test "uninitialized" =
@@ -186,7 +186,7 @@ let%expect_test "push and pop" =
 
 let%expect_test "pop throws on empty stack" =
   run_vm [ Pop (to_d R3); Halt ];
-  [%expect {|unhandled exn: Arch__Stack.Stack_Empty|}]
+  [%expect {|Failure("[exec PC=1] pop: unhandled exception: Arch__Stack.Stack_Empty")|}]
 ;;
 
 let%expect_test "rmem and wmem" =

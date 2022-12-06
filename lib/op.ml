@@ -277,20 +277,48 @@ let specs =
 
 let specs_by_opcode = List.map (fun spec -> spec.opcode, spec) specs
 
-let decode () =
+let decode ?(trace = false) () =
   State.(
+    let* { pc; _ } = get () in
     let* opcode = fetch_data () in
     let spec_opt =
       Base.List.Assoc.find specs_by_opcode ~equal:Int.equal (D.to_int opcode)
     in
     match spec_opt with
-    | Some spec -> return spec
-    | None -> failwith @@ Printf.sprintf "no such opcode: %d" (Arch.D.to_int opcode))
+    | Some spec ->
+      if trace
+      then Printf.fprintf Out_channel.stderr "[decode PC=%d] %s\n" (A.to_int pc) spec.name;
+      return spec
+    | None ->
+      failwith
+      @@ Printf.sprintf
+           "[decode PC=%d] no such opcode: %d"
+           (A.to_int pc)
+           (Arch.D.to_int opcode))
 ;;
 
-let rec run_until_halt () =
+(* wrapper around exec to handle exceptions *)
+let exec_w spec state =
+  try spec.exec () state with
+  | Failure s ->
+    failwith
+    @@ Printf.sprintf
+         "[exec PC=%d] %s: unhandled exception: %s"
+         (A.to_int state.pc)
+         spec.name
+         s
+  | e ->
+    failwith
+    @@ Printf.sprintf
+         "[exec PC=%d] %s: unhandled exception: %s"
+         (A.to_int state.pc)
+         spec.name
+         (Printexc.to_string e)
+;;
+
+let rec run_until_halt ?(trace = false) () =
   State.(
-    let* spec = decode () in
-    let* is_halt = spec.exec () in
+    let* spec = decode ~trace () in
+    let* is_halt = exec_w spec in
     if is_halt then return () else run_until_halt ())
 ;;
