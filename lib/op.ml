@@ -277,7 +277,7 @@ let specs =
         State.(
           fun () ->
             let* dst = fetch_reg () in
-            let* c = next_char () in
+            let* c = read_next_char_stdin () in
             let* _ = write_reg dst (c |> Char.code |> D.of_int) in
             return false)
     }
