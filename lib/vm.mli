@@ -5,4 +5,4 @@ val of_bytes : ?inbuf:string -> bytes -> Arch.t
 val of_ints : int list -> Arch.t
 
 (** [run s] runs VM with initial state [s], and returns final state. *)
-val run : Arch.t -> Arch.t
+val run : trace:bool -> Arch.t -> Arch.t

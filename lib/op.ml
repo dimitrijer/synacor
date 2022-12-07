@@ -288,7 +288,7 @@ let specs =
 
 let specs_by_opcode = List.map (fun spec -> spec.opcode, spec) specs
 
-let decode ?(trace = false) () =
+let decode ~(trace : bool) () =
   State.(
     let* { pc; _ } = get () in
     let* opcode = fetch_data () in
@@ -327,9 +327,9 @@ let exec_w spec state =
          (Printexc.to_string e)
 ;;
 
-let rec run_until_halt ?(trace = false) () =
+let rec run_until_halt ~(trace : bool) () =
   State.(
     let* spec = decode ~trace () in
     let* is_halt = exec_w spec in
-    if is_halt then return () else run_until_halt ())
+    if is_halt then return () else run_until_halt ~trace ())
 ;;

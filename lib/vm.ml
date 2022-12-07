@@ -24,4 +24,4 @@ let of_ints is =
 ;;
 
 (** [run s] runs VM at state [s]. *)
-let run state = snd @@ Op.run_until_halt () state
+let run ~(trace : bool) state = snd @@ Op.run_until_halt ~trace () state
